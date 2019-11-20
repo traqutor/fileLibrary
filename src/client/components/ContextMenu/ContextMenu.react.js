@@ -24,8 +24,8 @@ export default
 class ContextMenu extends Component {
   render() {
     const { items, triggerId, ...restProps } = this.props;
-
-    const childrenElement = items.map((item, i) => (
+      console.log('items', items);
+      const childrenElement = items.map((item, i) => (
       <ContextMenuItem
         key={i}
         onClick={item.onClick || (() => {})}
