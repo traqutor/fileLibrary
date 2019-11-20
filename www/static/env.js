@@ -1,0 +1,1 @@
+window.env = {"HOST":"localhost","PORT":3000,"SERVER_URL":"http://localhost:3020"};
