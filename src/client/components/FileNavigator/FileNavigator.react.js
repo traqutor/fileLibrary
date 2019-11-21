@@ -32,7 +32,8 @@ const propTypes = {
   onResourceLocationChange: PropTypes.func,
   onSelectionChange: PropTypes.func,
   onResourceChange: PropTypes.func,
-  onResourceChildrenChange: PropTypes.func
+  onResourceChildrenChange: PropTypes.func,
+  getSelectedItems: PropTypes.func,
 };
 
 const defaultProps = {
@@ -53,7 +54,8 @@ const defaultProps = {
   onResourceLocationChange: () => {},
   onSelectionChange: () => {},
   onResourceChange: () => {},
-  onResourceChildrenChange: () => {}
+  onResourceChildrenChange: () => {},
+  getSelectedItems: () => {},
 };
 
 const MONITOR_API_AVAILABILITY_TIMEOUT = 16;
@@ -108,16 +110,15 @@ class FileNavigator extends Component {
 
   setStateAsync = (...args) => {
     if (this._isMounted) {
+
       this.setState(...args)
     }
   }
 
   initialize = async () => {
     const { apiOptions, api, capabilities, viewLayoutOptions } = this.props;
-
     const capabilitiesProps = this.getCapabilitiesProps();
     const initializedCapabilities = capabilities(apiOptions, capabilitiesProps);
-
     const { apiInitialized, apiSignedIn } = await api.init({ ...apiOptions });
 
     this.setStateAsync({
@@ -261,6 +262,7 @@ class FileNavigator extends Component {
   handleSelectionChange = (selection) => {
     this.setStateAsync({ selection });
     this.props.onSelectionChange(selection);
+    this.props.getSelectedItems(selection);
   };
 
   handleResourceChildrenChange = (resourceChildren) => {

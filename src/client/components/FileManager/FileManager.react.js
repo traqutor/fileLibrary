@@ -18,7 +18,7 @@ class FileManager extends Component {
 
   render() {
     const { children, className, ...restProps } = this.props;
-
+    console.log('FileManager', this.props);
     return (
       <div data-test-id="filemanager" className={`oc-fm--file-manager ${className || ''}`} {...restProps}>
         <DragDropContextProvider backend={HTML5Backend}>
