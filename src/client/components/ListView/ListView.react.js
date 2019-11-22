@@ -15,6 +15,8 @@ import detectIt from 'detect-it';
 import rawToReactElement from '../raw-to-react-element';
 import WithSelection from './withSelectionHOC';
 import { isDef } from './utils';
+import ErrorBoundary from 'react-error-boundary';
+import { Draggable, Droppable } from 'react-beautiful-dnd';
 
 const ROW_HEIGHT = 38;
 const HEADER_HEIGHT = 38;
@@ -193,84 +195,94 @@ class ListView extends Component {
     }
 
     return (
-      <AutoSizer>
-        {({ width, height }) => (this.containerHeight = height) && (
+      
+      <ErrorBoundary onError={(error) => {console.log(error)}}>
+        <AutoSizer>
+          {({ width, height }) => (this.containerHeight = height) && (
 
-          <WithSelection
-            items={itemsToRender}
-            onKeyDown={this.handleKeyDown}
-            onSelection={this.handleSelection}
-            onRowClick={this.handleRowClick}
-            onRowRightClick={this.handleRowRightClick}
-            onRowDoubleClick={this.handleRowDoubleClick}
-            selection={this.props.selection}
-            onRef={onRef}
-          >
-            {
-              ({
-                onRowClick,
-                onRowRightClick,
-                onRowDoubleClick,
-                selection,
-                lastSelected
-              }) => (
-                <div
-                  className="oc-fm--list-view"
-                >
-                  <ScrollOnMouseOut
-                    onCursorAbove={this.handleScrollTop}
-                    onCursorBellow={this.handleScrollTop}
-                    clientHeight={clientHeight}
-                    scrollHeight={scrollHeight}
-                    scrollTop={scrollTop}
-                    topCaptureOffset={40}
-                    bottomCaptureOffset={0}
-                    style={{
-                      width: `${width}px`,
-                      height: `${height}px`
-                    }}
+            <WithSelection
+              items={itemsToRender}
+              onKeyDown={this.handleKeyDown}
+              onSelection={this.handleSelection}
+              onRowClick={this.handleRowClick}
+              onRowRightClick={this.handleRowRightClick}
+              onRowDoubleClick={this.handleRowDoubleClick}
+              selection={this.props.selection}
+              onRef={onRef}
+            >
+              {
+                ({
+                  onRowClick,
+                  onRowRightClick,
+                  onRowDoubleClick,
+                  selection,
+                  lastSelected
+                }) => (
+                  <div
+                    className="oc-fm--list-view"
                   >
-                    <ContextMenuTrigger id={filesViewContextMenuId} holdToDisplay={HAS_TOUCH ? 1000 : -1}>
-                      <Table
-                        width={width}
-                        height={height}
-                        rowCount={itemsToRender.length}
-                        rowGetter={({ index }) => itemsToRender[index]}
-                        rowHeight={ROW_HEIGHT}
-                        headerHeight={HEADER_HEIGHT}
-                        className="oc-fm--list-view__table"
-                        gridClassName="oc-fm--list-view__grid"
-                        overscanRowCount={10}
-                        onScroll={this.handleScroll}
-                        scrollToIndex={scrollToIndex}
-                        scrollTop={scrollTop}
-                        sort={this.handleSort} // eslint-disable-line react/jsx-handler-names
-                        sortBy={sortBy}
-                        sortDirection={sortDirection}
-                        rowRenderer={Row({
-                          selection, lastSelected, loading, contextMenuId: rowContextMenuId, hasTouch: HAS_TOUCH
-                        })}
-                        noRowsRenderer={NoFilesFoundStub}
-                        onRowClick={onRowClick}
-                        onRowRightClick={onRowRightClick}
-                        onRowDoubleClick={onRowDoubleClick}
-                      >
-                        {layout({ ...layoutOptions, loading, width, height }).map(
-                          (rawLayoutChild, i) => rawToReactElement(rawLayoutChild, i)
-                        )}
-                      </Table>
-                    </ContextMenuTrigger>
-                  </ScrollOnMouseOut>
-                  {this.props.children}
-                </div>
-              )
-            }
-          </WithSelection>
+                    <ScrollOnMouseOut
+                      onCursorAbove={this.handleScrollTop}
+                      onCursorBellow={this.handleScrollTop}
+                      clientHeight={clientHeight}
+                      scrollHeight={scrollHeight}
+                      scrollTop={scrollTop}
+                      topCaptureOffset={40}
+                      bottomCaptureOffset={0}
+                      style={{
+                        width: `${width}px`,
+                        height: `${height}px`
+                      }}
+                    >
+                      <ContextMenuTrigger id={filesViewContextMenuId} holdToDisplay={HAS_TOUCH ? 1000 : -1}>
+                        {/* <Droppable droppableId={'MainContainer'} type="list">
+                          {(providedGrid) => (
+                            <div {...providedGrid.droppableProps} ref={providedGrid.innerRef}> */}
+                              <Table
+                                width={width}
+                                height={height}
+                                rowCount={itemsToRender.length}
+                                rowGetter={({ index }) => itemsToRender[index]}
+                                rowHeight={ROW_HEIGHT}
+                                headerHeight={HEADER_HEIGHT}
+                                className="oc-fm--list-view__table"
+                                gridClassName="oc-fm--list-view__grid"
+                                overscanRowCount={10}
+                                onScroll={this.handleScroll}
+                                scrollToIndex={scrollToIndex}
+                                scrollTop={scrollTop}
+                                sort={this.handleSort} // eslint-disable-line react/jsx-handler-names
+                                sortBy={sortBy}
+                                sortDirection={sortDirection}
+                                rowRenderer={Row({
+                                  selection, lastSelected, loading, contextMenuId: rowContextMenuId, hasTouch: HAS_TOUCH
+                                })}
+                                noRowsRenderer={NoFilesFoundStub}
+                                onRowClick={onRowClick}
+                                onRowRightClick={onRowRightClick}
+                                onRowDoubleClick={onRowDoubleClick}
+                              >
+                                {layout({ ...layoutOptions, loading, width, height }).map(
+                                  (rawLayoutChild, i) => rawToReactElement(rawLayoutChild, i)
+                                )}
+                              </Table>
+                            {/* </div>
+                          )}
+                        </Droppable> */}
+                      </ContextMenuTrigger>
+                    </ScrollOnMouseOut>
+                    {this.props.children}
+                  </div>
+                )
+              }
+            </WithSelection>
 
 
-        )}
-      </AutoSizer>
+          )}
+        </AutoSizer>
+      </ErrorBoundary>
     );
+    
   }
 }
 

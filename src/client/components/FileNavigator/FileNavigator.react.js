@@ -82,6 +82,11 @@ class FileNavigator extends Component {
 
   componentDidMount() {
     this._isMounted = true;
+    const portal = document.createElement('div');
+    portal.classList.add('DragDropPortal');
+
+    document.body.appendChild(portal);
+
     this.initialize();
   }
 
@@ -162,10 +167,10 @@ class FileNavigator extends Component {
 
   monitorApiAvailability = () => {
     const { api } = this.props;
-
     this.apiAvailabilityTimeout = setTimeout(() => {
       if (api.hasSignedIn()) {
         this.setStateAsync({ apiInitialized: true, apiSignedIn: true });
+        
         this.handleApiReady();
       } else {
         this.monitorApiAvailability();
@@ -196,16 +201,17 @@ class FileNavigator extends Component {
   };
 
   navigateToDir = async (toId, idToSelect, startLoading = true, changeHistory = true) => {
+
+    
     const { history, sortBy, sortDirection } = this.state;
 
     if (startLoading) {
       this.startViewLoading();
     }
-
+    
     const resource = await this.getResourceById(toId);
     this.handleResourceChange(resource);
-
-    const resourceChildren = await this.getChildrenForId(resource.id, sortBy, sortDirection);
+    const resourceChildren =  await this.getChildrenForId(resource.id, sortBy, sortDirection);
 
     const newSelection = (typeof idToSelect === 'undefined' || idToSelect === null) ? [] : [idToSelect];
 
@@ -218,6 +224,7 @@ class FileNavigator extends Component {
 
     this.stopViewLoading();
     this.setParentsForResource(resource);
+    
   };
 
   async setParentsForResource(resource) {

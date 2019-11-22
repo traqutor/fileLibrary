@@ -3,46 +3,71 @@
 // TODO Make sure this component can be optimised using "shouldComponentUpdate"
 
 import React, { Component } from 'react';
-import { DragSource } from 'react-dnd';
 import { ContextMenuTrigger } from "react-contextmenu";
+import { Draggable, Droppable } from 'react-beautiful-dnd';
+import styled from 'styled-components';
+import ReactDOM from 'react-dom';
 
-const RowDragSource = {
-  canDrag(props) {
-    // You can disallow drag based on props
-    return true;
-    // return props.isReady;
-  },
+class PortalAwareRow extends Component{
+  render() {
 
-  isDragging(props, monitor) {
-    // console.log('is dragging');
-    // console.log('item', monitor.getItem());
-    return monitor.getItem().id === props.rowData.id;
-  },
+    const {
+      provided,
+      snapshot,
+      selection,
+      lastSelected,
+      rowData,
+      loading,
+      contextMenuId,
+    } = this.props;
 
-  beginDrag(props, monitor, component) {
-    const item = { id: props.rowData.id };
-    return item;
-  },
+    const usePortal: boolean = snapshot.isDragging;
 
-  endDrag(props, monitor, component) {
-    if (!monitor.didDrop()) {
-      return;
+    const child: Node = (
+      <RowDiv
+        ref={provided.innerRef}
+        {...provided.draggableProps}
+        {...provided.dragHandleProps}
+        inPortal={usePortal}
+      >
+        <Row
+          {...this.props}
+          selection={selection}
+          lastSelected={lastSelected}
+          loading={loading}
+          contextMenuId={contextMenuId}
+          isDragging={snapshot.isDragging}
+        />
+      </RowDiv>
+    );
+
+    if (!usePortal) {
+      return child;
     }
 
-    // const item = monitor.getItem();
-    // const dropResult = monitor.getDropResult();
+    // if dragging - put the item in a portal
+    const portal = document.getElementsByClassName('DragDropPortal')[0];
+    return ReactDOM.createPortal(child, portal);
   }
-};
-
-function collect(connect, monitor) {
-  return {
-    connectDragSource: connect.dragSource(),
-    connectDragPreview: connect.dragPreview(),
-    isDragging: monitor.isDragging()
-  };
 }
+const RowDiv = styled.div`
+  /* used for positioning the after content */
+  position: relative;
+  /* stylelint-disable  comment-empty-line-before */
+  /* add little portal indicator when in a portal */
+  ${props =>
+    props.inPortal
+      ? `
+    ::after {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      border: 3px solid black;
+    }
+  `
+      : ''} /* stylelint-enable */;
+`;
 
-@DragSource('filemanager-resource', RowDragSource, collect)
 class Row extends Component {
   render() {
     /* eslint-disable  react/prop-types */
@@ -60,16 +85,13 @@ class Row extends Component {
       selection,
       lastSelected,
       loading,
-      isDragging,
-      connectDragSource,
-      connectDragPreview,
       contextMenuId,
-      hasTouch
+      hasTouch,
+      isDragging,
     } = this.props;
     /* eslint-enable react/prop-types */
 
     const a11yProps = {};
-
     if (
       onRowClick ||
         onRowDoubleClick ||
@@ -101,38 +123,62 @@ class Row extends Component {
 
     const isSelected = selection.indexOf(rowData.id) !== -1;
     const isLastSelected = lastSelected === rowData.id;
-
     return (
       <ContextMenuTrigger id={contextMenuId} holdToDisplay={hasTouch ? 1000 : -1}>
-        {connectDragPreview(connectDragSource((
-          <div
-            {...a11yProps}
-            className={`
-              ReactVirtualized__Table__row
-              oc-fm--list-view__row
-              ${(! loading && isSelected) ? 'oc-fm--list-view__row--selected' : ''}
-              ${(!loading && isLastSelected) ? 'oc-fm--list-view__row--last-selected' : ''}
-              ${(!loading && isDragging) ? 'oc-fm--list-view__row--dragging' : ''}
-              ${loading ? 'oc-fm--list-view__row--loading' : ''}
-            `}
-            key={rowData.id}
-            role="row"
-            style={style}
-          >
-            {columns}
-          </div>
-        )))}
+        <div
+          {...a11yProps}
+          className={`
+            ReactVirtualized__Table__row
+            oc-fm--list-view__row
+            ${(! loading && isSelected) ? 'oc-fm--list-view__row--selected' : ''}
+            ${(!loading && isLastSelected) ? 'oc-fm--list-view__row--last-selected' : ''}
+            ${(!loading && isDragging) ? 'oc-fm--list-view__row--dragging' : ''}
+            ${loading ? 'oc-fm--list-view__row--loading' : ''}
+          `}
+          key={rowData.id}
+          role="row"
+          style={style}
+        >
+          { columns }
+        </div>
       </ContextMenuTrigger>
     );
   }
 }
 
-export default ({ selection, lastSelected, loading, contextMenuId }) => (props) => (
-  <Row
-    {...props}
-    selection={selection}
-    lastSelected={lastSelected}
-    loading={loading}
-    contextMenuId={contextMenuId}
-  />
-);
+export default ({ selection, lastSelected, loading, contextMenuId}) => (props) => {
+  let elementToRender = (
+    <Row
+      {...props}
+      selection={selection}
+      lastSelected={lastSelected}
+      loading={loading}
+      contextMenuId={contextMenuId}
+    />
+  );
+  if (props.rowData && props.rowData.id) {
+    elementToRender = (
+      <Droppable droppableId={`${props.rowData.type};${props.rowData.id}`} type="list">
+        {(providedDroppable, snapshotDroppable) => (
+          <div {...providedDroppable.droppableProps} ref={providedDroppable.innerRef} style={{ width: '100%', height: '38px', border: snapshotDroppable.draggingOverWith && props.rowData.type === 'dir' ? '1px solid black' : 'none'}}  >
+            <Draggable draggableId={props.rowData.id} index={props.index} key={props.rowData.id}>
+              {(provided, snapshot) => (
+                <PortalAwareRow
+                  {...props}
+                  provided={provided}
+                  snapshot={snapshot}
+                  selection={selection}
+                  lastSelected={lastSelected}
+                  loading={loading}
+                  contextMenuId={contextMenuId}
+                />
+              )}
+            </Draggable>
+          </div>
+        )}
+      </Droppable>
+    );
+  };
+
+  return elementToRender;
+};

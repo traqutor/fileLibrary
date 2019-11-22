@@ -2,6 +2,7 @@ import React from 'react';
 import './NameCell.less';
 import Svg from '@opuscapita/react-svg/lib/SVG';
 import LoadingCell from '../LoadingCell';
+import { Draggable } from 'react-beautiful-dnd';
 
 export default ({loading, getIcon}) => (cellProps) => {
 

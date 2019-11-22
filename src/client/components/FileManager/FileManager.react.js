@@ -1,8 +1,8 @@
 import PropTypes from 'prop-types';
 import React, { Component, Children } from 'react';
 import './FileManager.less';
-import HTML5Backend from 'react-dnd-html5-backend';
-import { DragDropContextProvider } from 'react-dnd';
+
+import { DragDropContext } from 'react-beautiful-dnd';
 
 const propTypes = {
   className: PropTypes.string
@@ -16,12 +16,25 @@ class FileManager extends Component {
     this.state = { };
   }
 
+  handleOnDragEnd = (result) => {
+    const { api, apiOptions } = this.props.children.props;
+    const destinationType = result.destination.droppableId.split(';')[0];
+    const destinationGuid = result.destination.droppableId.split(';')[1];
+    const sourceGuid = result.source.droppableId.split(';')[1];
+    if (destinationType === 'dir') {
+      api.changeDirectory(apiOptions, sourceGuid, destinationGuid);
+    }
+  };
+
+  isMoved(guid) {
+    return this.state.moved.indexOf(guid) !== -1;
+  }
+
   render() {
     const { children, className, ...restProps } = this.props;
-
     return (
       <div data-test-id="filemanager" className={`oc-fm--file-manager ${className || ''}`} {...restProps}>
-        <DragDropContextProvider backend={HTML5Backend}>
+        <DragDropContext onDragEnd = {this.handleOnDragEnd}>
           <div className="oc-fm--file-manager__navigators">
             {Children.toArray(children).map((child, i) => (
               <div key={i} className="oc-fm--file-manager__navigator">
@@ -29,7 +42,7 @@ class FileManager extends Component {
               </div>
             ))}
           </div>
-        </DragDropContextProvider>
+        </DragDropContext>
       </div>
     );
   }
