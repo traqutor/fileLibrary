@@ -24,13 +24,16 @@ export default ({loading, getIcon}) => (cellProps) => {
         <div className="oc-fm--name-cell">
             <div className="oc-fm--name-cell__icon">
                 { matchFileExtensionsForThumbnail(name, pictureFilesExtensions) ?
-                    <img src={window.StorageURL + 'w_40,h_40,c_scale/' + id + '.png'} />
+                    <img
+                        style={{ height: "40px", width: "40px" }}
+                        src={`${window.StorageURL}w_40,h_40,c_scale/${id}` }
+                    />
                         :
                     <Svg
-                    className="oc-fm--name-cell__icon-image"
-                    svg={svg}
-                    style={{fill}}
-                />}
+                        className="oc-fm--name-cell__icon-image"
+                        svg={svg}
+                        style={{fill}}
+                    />}
             </div>
             <div
                 className="oc-fm--name-cell__title"
